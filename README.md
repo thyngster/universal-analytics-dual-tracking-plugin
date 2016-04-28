@@ -1,7 +1,6 @@
 # universal-analytics-dual-tracking-plugin
 Repository for the online Google Analytics hackaton
-URL: 
-# H5
+Hackathon Post URL: 
 https://www.thyngster.com/universal-analytics-plugin-dual-tracking/
 
 
