@@ -2,7 +2,7 @@
 Repository for the online Google Analytics hackaton
 URL: 
 # H5
-https://wwww.thyngster.com/
+https://www.thyngster.com/universal-analytics-plugin-dual-tracking/
 
 
 ```javascript
