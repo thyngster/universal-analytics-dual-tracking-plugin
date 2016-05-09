@@ -11,5 +11,4 @@ ga('require', 'dualtracking', 'http://www.yourdomain.com/js/dualtracking.js', {
     debug: true,
     transport: 'image'
 });
-ga('dualtracking:doDualTracking');
 ga('send', 'pageview');
