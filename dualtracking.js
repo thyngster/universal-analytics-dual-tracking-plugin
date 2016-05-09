@@ -12,26 +12,23 @@
 		
 		if(!this.property || !this.property.match(/^UA-([0-9]*)-([0-9]{1,2}$)/)){
 			this.debugMessage('dualtracking plugin: property id, needs to be set and have the following format UA-XXXXXXXX-YY');
-		}else{
-			window.__gaDualTracking = {};
-			window.__gaDualTracking.property = this.property;
-			window.__gaDualTracking.transport = this.transport;
+			return;
 		}
 
 		var originalSendHitTask = this.tracker.get('sendHitTask');
-		this.tracker.set('sendHitTask', function(model) {
+		this.tracker.set('sendHitTask', (function(model) {
 			var payLoad = model.get('hitPayload');
 			var data = (payLoad).replace(/(^\?)/,'').split("&").map(function(n){return n = n.split("="),this[n[0]] = n[1],this}.bind({}))[0];
-			data.tid = window.__gaDualTracking.property;
+			data.tid = this.property;
 			originalSendHitTask(model);
 			var newPayload = Object.keys(data).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]); }).join('&');
-			if(__gaDualTracking.transport=="image"){
+			if(this.transport=="image"){
 				var i=new Image(1,1);
 				i.src="https://www.google-analytics.com/collect"+"?"+newPayload;i.onload=function(){}
-			}else if(__gaDualTracking.transport=="beacon"){
+			}else if(this.transport=="beacon"){
 				navigator.sendBeacon("https://www.google-analytics.com/collect", newPayload);
 			}
-		});
+		}).bind(this) );
 	};
 
 	/**
