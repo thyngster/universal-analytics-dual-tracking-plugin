@@ -4,17 +4,12 @@
 (function(){
 
 	var DualTracking = function(tracker, config) {
+		this.debugMessage('Initializing the dualtracking plugin for GA');
 		this.tracker = tracker;
 		this.property = config.property;
 		this.isDebug = config.debug;
 		this.transport = config.transport || 'beacon';
-	};
-
-	/**
-	 *
-	 */
-	DualTracking.prototype.doDualTracking = function(){
-		this.debugMessage('Initializing the dualtracking plugin for GA');
+		
 		if(!this.property || !this.property.match(/^UA-([0-9]*)-([0-9]{1,2}$)/)){
 			this.debugMessage('dualtracking plugin: property id, needs to be set and have the following format UA-XXXXXXXX-YY');
 		}else{
