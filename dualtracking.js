@@ -36,7 +36,7 @@
 	 */
 	DualTracking.prototype.debugMessage = function(message) {
 		if (!this.isDebug) return;
-		if (console) console.debug(message);
+		if (window.console) console.debug(message);
 	};
 
 	// Provide this plugin to GA.
