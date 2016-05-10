@@ -2,16 +2,18 @@
  *  Universal Analytics Dual Tracking Plugin
  */
 (function(){
+	
+	var isDebug;
 
 	var DualTracking = function(tracker, config) {
-		this.debugMessage('Initializing the dualtracking plugin for GA');
+		isDebug = config.debug;
+		log('info','Initializing...');
 		this.tracker = tracker;
 		this.property = config.property;
-		this.isDebug = config.debug;
 		this.transport = config.transport || 'beacon';
 		
 		if(!this.property || !this.property.match(/^UA-([0-9]*)-([0-9]{1,2}$)/)){
-			this.debugMessage('dualtracking plugin: property id, needs to be set and have the following format UA-XXXXXXXX-YY');
+			log('error','property id, needs to be set and have the following format UA-XXXXXXXX-YY');
 			return;
 		}
 
@@ -29,16 +31,24 @@
 				}else if(this.transport=="beacon"){
 					navigator.sendBeacon("https://www.google-analytics.com/collect", newPayload);
 				}
+				log('info','Sent dual hit to '+this.property);
 			}catch(ex){}
 		}).bind(this) );
 	};
 
 	/**
 	 * Displays a debug message in the console, if debugging is enabled.
+	 * @param {string} [type="debug"] - Optional. One of "debug", info", or "error".
+	 * @param {string} message - The string (or object) to show.
 	 */
-	DualTracking.prototype.debugMessage = function(message) {
-		if (!this.isDebug) return;
-		if (window.console) console.debug(message);
+	var log = function( type, message ){
+		if( !isDebug || !window.console )
+			return;
+		if( arguments.length == 1 ){
+			message = arguments[0];
+			type = "debug";
+		}
+		console[type]( '[DualTracking]', message );
 	};
 
 	// Provide this plugin to GA.
