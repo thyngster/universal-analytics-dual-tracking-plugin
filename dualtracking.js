@@ -11,7 +11,7 @@
 		log('info','Initializing...');
 		this.tracker = tracker;
 		this.property = config.property;
-		this.transport = config.transport || 'beacon';
+		this.transport = config.transport || tracker.get('transport') || 'beacon';
 		
 		if(!this.property || !this.property.match(/^UA-([0-9]*)-([0-9]{1,2}$)/))
 			return log('error','property id, needs to be set and have the following format UA-XXXXXXXX-YY');
