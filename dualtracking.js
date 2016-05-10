@@ -17,17 +17,19 @@
 
 		var originalSendHitTask = this.tracker.get('sendHitTask');
 		this.tracker.set('sendHitTask', (function(model) {
-			var payLoad = model.get('hitPayload');
-			var data = (payLoad).replace(/(^\?)/,'').split("&").map(function(n){return n = n.split("="),this[n[0]] = n[1],this}.bind({}))[0];
-			data.tid = this.property;
 			originalSendHitTask(model);
-			var newPayload = Object.keys(data).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]); }).join('&');
-			if(this.transport=="image"){
-				var i=new Image(1,1);
-				i.src="https://www.google-analytics.com/collect"+"?"+newPayload;i.onload=function(){}
-			}else if(this.transport=="beacon"){
-				navigator.sendBeacon("https://www.google-analytics.com/collect", newPayload);
-			}
+			try{
+				var payLoad = model.get('hitPayload');
+				var data = (payLoad).replace(/(^\?)/,'').split("&").map(function(n){return n = n.split("="),this[n[0]] = n[1],this}.bind({}))[0];
+				data.tid = this.property;
+				var newPayload = Object.keys(data).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]); }).join('&');
+				if(this.transport=="image"){
+					var i=new Image(1,1);
+					i.src="https://www.google-analytics.com/collect"+"?"+newPayload;i.onload=function(){}
+				}else if(this.transport=="beacon"){
+					navigator.sendBeacon("https://www.google-analytics.com/collect", newPayload);
+				}
+			}catch(ex){}
 		}).bind(this) );
 	};
 
