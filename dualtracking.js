@@ -1,58 +1,62 @@
-    /**
-	 *  Universal Analytics Dual Tracking Plugin
-	 */
+/**
+ *  Universal Analytics Dual Tracking Plugin
+ */
 (function(){
-	function providePlugin(pluginName, pluginConstructor) {
-	  var ga = window[window['GoogleAnalyticsObject'] || 'ga'];
-	  if (typeof ga == 'function') {
-		ga('provide', pluginName, pluginConstructor);
-	  }
-	}
+	
+	var isDebug;
 
 	var DualTracking = function(tracker, config) {
-	  this.tracker = tracker;
-	  this.property = config.property, 
-	  this.isDebug = config.debug;
-	  this.transport = config.transport || 'beacon';
-	};
-	
-    /**
-	 * 
-	 */
-	DualTracking.prototype.doDualTracking = function() {
-		this.debugMessage('Initializing the dualtracking plugin for GA');  
-		if(!this.property || !this.property.match(/^UA-([0-9]*)-([0-9]{1,2}$)/)){
-			this.debugMessage('dualtracking plugin: property id, needs to be set and have the following format UA-XXXXXXXX-YY');  
-			return 0;			
-		}else{
-			window.__gaDualTracking = {};
-			window.__gaDualTracking.property = this.property;
-			window.__gaDualTracking.transport = this.transport;
-		}
+		config = config || {};
+		isDebug = config.debug;
+		log('info','Initializing...');
+		this.tracker = tracker;
+		this.property = config.property;
+		this.transport = config.transport || tracker.get('transport') || 'beacon';
 		
+		if(!this.property || !this.property.match(/^UA-([0-9]*)-([0-9]{1,2}$)/))
+			return log('error','property id, needs to be set and have the following format UA-XXXXXXXX-YY');
+		if( this.transport!='image' && this.transport!='beacon' && this.transport!='xhr' )
+			return log('error','"'+this.transport+'" is an invalid value for transport.');
+
 		var originalSendHitTask = this.tracker.get('sendHitTask');
-		this.tracker.set('sendHitTask', function(model) {
-			var payLoad = model.get('hitPayload');	
-			var data = (payLoad).replace(/(^\?)/,'').split("&").map(function(n){return n = n.split("="),this[n[0]] = n[1],this}.bind({}))[0];
-			data.tid = window.__gaDualTracking.property;
+		this.tracker.set('sendHitTask', (function(model) {
 			originalSendHitTask(model);
-			var newPayload = Object.keys(data).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]); }).join('&');
-			if(__gaDualTracking.transport=="image"){
-				var i=new Image(1,1);	
-				i.src="https://www.google-analytics.com/collect"+"?"+newPayload;i.onload=function(){return;}				
-			}else if(__gaDualTracking.transport=="beacon"){
-				navigator.sendBeacon("https://www.google-analytics.com/collect", newPayload);
-			}			
-		});
-	}
+			try{
+				var payLoad = model.get('hitPayload');
+				var data = (payLoad).replace(/(^\?)/,'').split("&").map(function(n){return n = n.split("="),this[n[0]] = n[1],this}.bind({}))[0];
+				data.tid = this.property;
+				var newPayload = Object.keys(data).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]); }).join('&');
+				if(this.transport=="image"){
+					var i=new Image(1,1);
+					i.src="https://www.google-analytics.com/collect"+"?"+newPayload;i.onload=function(){}
+				}else if(this.transport=="beacon"){
+					navigator.sendBeacon("https://www.google-analytics.com/collect", newPayload);
+				}else{
+					//TODO: implement xhr method
+					log('TODO: implement XHR method.');
+				}
+				log('info','Sent dual hit to '+this.property);
+			}catch(ex){}
+		}).bind(this) );
+	};
 
 	/**
 	 * Displays a debug message in the console, if debugging is enabled.
+	 * @param {string} [type="debug"] - Optional. One of "debug", info", or "error".
+	 * @param {string} message - The string (or object) to show.
 	 */
-	DualTracking.prototype.debugMessage = function(message) {
-	  if (!this.isDebug) return;
-	  if (console) console.debug(message);
+	var log = function( type, message ){
+		if( !isDebug || !window.console )
+			return;
+		if( arguments.length == 1 ){
+			message = arguments[0];
+			type = "debug";
+		}
+		console[type]( '[DualTracking]', message );
 	};
 
-	providePlugin('dualtracking', DualTracking);  	
+	// Provide this plugin to GA.
+	var ga = window[window['GoogleAnalyticsObject']||'ga'];
+	ga('provide', 'dualtracking', DualTracking);
+
 })();
