@@ -15,8 +15,20 @@
 		
 		if(!this.property || !this.property.match(/^UA-([0-9]*)-([0-9]{1,2}$)/))
 			return log('error','property id, needs to be set and have the following format UA-XXXXXXXX-YY');
+		
 		if( this.transport!='image' && this.transport!='beacon' && this.transport!='xhr' )
 			return log('error','"'+this.transport+'" is an invalid value for transport.');
+		
+		if( this.transport=='beacon' && !navigator.sendBeacon ){
+			log( 'info', 'Browser does not support sendBeacon; defaulting to transport=image.' );
+			this.transport = 'image';
+		}
+		
+		//TODO: implement xhr method
+		if( this.transport=='xhr' ){
+			log('warn','XHR not supported yet; defaulting to transport=image.');
+			this.transport = 'image';
+		}
 
 		var originalSendHitTask = this.tracker.get('sendHitTask');
 		this.tracker.set('sendHitTask', (function(model) {
@@ -33,7 +45,7 @@
 					navigator.sendBeacon("https://www.google-analytics.com/collect", newPayload);
 				}else{
 					//TODO: implement xhr method
-					log('TODO: implement XHR method.');
+					log('error','TODO: implement XHR method.');
 				}
 				log('info','Sent dual hit to '+this.property);
 			}catch(ex){}
