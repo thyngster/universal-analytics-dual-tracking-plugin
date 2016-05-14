@@ -1,15 +1,24 @@
-# universal-analytics-dual-tracking-plugin
+# Universal Analytics Dual Tracking Plugin
 Repository for the online Google Analytics hackaton
-Hackathon Post URL: 
+Hackathon Post URL:
 https://www.thyngster.com/universal-analytics-plugin-dual-tracking/
 
+# What is it for
+This will send GA tracking calls to a second property without using named trackers and configuring each call twice.
+It also allows to overwrite or exlude fields in the secondary call via the "fields" object in configuration.
+
+# Configuration
 
 ```javascript
 ga('create', 'UA-286304-123', 'auto');
 ga('require', 'dualtracking', 'http://www.yourdomain.com/js/dualtracking.js', {
     property: 'UA-123123123213-11',
     debug: true,
-    transport: 'image'
+    transport: 'image',
+    fields: {
+      'userId':null
+    }
 });
-ga('dualtracking:doDualTracking');
 ga('send', 'pageview');
+
+This would send a call to UA-123123123213-11 while unsetting the userId field. Be aware that if you unset a required field the tracking call might not work.
