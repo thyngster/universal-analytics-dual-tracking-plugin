@@ -107,7 +107,7 @@
    */
   DualTracking.prototype.deconstructPayload = function(payLoad) {
 
-    that.debugMessage("debug", "Running deconstructPayload");
+    this.debugMessage("debug", "Running deconstructPayload");
 
     // remove leading question mark, split by ampersand and map to
     // function that splits into key/value pairs
