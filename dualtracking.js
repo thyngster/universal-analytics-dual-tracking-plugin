@@ -8,9 +8,10 @@
  *  Eike Pierstorff flesheatingarthropods.org
  *  https://github.com/flesheatingarthropods/universal-analytics-dual-tracking-plugin
  *
- *  Array methods polyfills written by  Independent software
+ *  Array methods polyfills  by  Independent software
  *  http://www.independent-software.com/about-independent-software/
  */
+
 (function() {
   function providePlugin(pluginName, pluginConstructor) {
     var ga = window[window['GoogleAnalyticsObject'] || 'ga'];
@@ -21,6 +22,7 @@
 
   var DualTracking = function(tracker, config) {
     this.tracker = tracker;
+
     this.property = config.property;
     this.fields = config.fields || {};
     this.gaEndpoint = "https://www.google-analytics.com/collect";
@@ -30,15 +32,17 @@
       this.isDebug = false;
     }
 
-    this.transport = config.transport || 'beacon';
+    // TODO see if default transport method can be obtained from the tracker
+    this.transport = config.transport || "image";
+
     var validTransportOptions = ['image', 'beacon', 'xhr'];
     if (validTransportOptions.indexOf(this.transport) == -1) {
       this.transport = "image";
-      this.debugMessage('info', 'Invalid transport option; defaulting to transport image');
+      this.log('info', 'Invalid transport option; defaulting to transport image');
     }
     if (this.transport == 'beacon' && !navigator.sendBeacon) {
       this.transport = "image";
-      this.debugMessage('info', 'Browser does not support sendBeacon; defaulting to transport image');
+      this.log('info', 'Browser does not support sendBeacon; defaulting to transport image');
     }
 
     this.doDualTracking();
@@ -49,9 +53,9 @@
    */
   DualTracking.prototype.doDualTracking = function() {
 
-    this.debugMessage('Initializing the dualtracking plugin for GA');
+    this.log('Initializing the dualtracking plugin for GA');
     if (!this.property || !this.property.match(/^UA-([0-9]*)-([0-9]{1,2}$)/)) {
-      this.debugMessage('Property id, needs to be set and have the following format UA-XXXXXXXX-YY');
+      this.log('Property id, needs to be set and have the following format UA-XXXXXXXX-YY');
       return 0;
     }
 
@@ -65,7 +69,7 @@
       if (this.debug && this.transport != "xhr") {
         var len = lengthInUtf8Bytes(payload);
         if (len > 2047) {
-          this.debugMessage('info', 'Huge payload ( ~' + len + ' chars), consider setting transport to xhr');
+          this.log('info', 'Huge payload ( ~' + len + ' chars), consider setting transport to xhr');
         }
       }
 
@@ -79,10 +83,10 @@
       if (this.transport == "image") {
         var i = new Image(1, 1);
         i.src = [this.gaEndpoint, newPayload].join("?");
-        this.debugMessage('info', 'Image request sent');
+        this.log('info', 'Image request sent');
       } else if (this.transport == "beacon") { //  TODO send newPayload as data, not via the url
         navigator.sendBeacon([this.gaEndpoint, newPayload].join("?"), '');
-        this.debugMessage('info', 'Beacon sent');
+        this.log('info', 'Beacon sent');
       } else if (this.transport == "xhr") {
 
         var xhr = new XMLHttpRequest();
@@ -93,14 +97,14 @@
         xhr.onload = function() {
           var response = xhr.response;
           if (xhr.response.length == 0) {
-            this.debugMessage('error', 'Empty response'); // something went wrong
+            this.log('error', 'Empty response'); // something went wrong
           } else {
-            this.debugMessage('info', 'XHR request sent');
+            this.log('info', 'XHR request sent');
           }
         }.bind(this);
         // if sending did not work at all (network down, url unreachable etc)
         xhr.onerror = function(e) {
-          this.debugMessage('error', 'Network error, no data sent');
+          this.log('error', 'Network error, no data sent');
         }.bind(this);
       }
     }.bind(this));
@@ -117,7 +121,7 @@
       return n = n.split("="), this[n[0]] = n[1], this
     }.bind({}))[0];
 
-    this.debugMessage("debug", "Converted payload to key/value pairs");
+    this.log("debug", "Converted payload to key/value pairs");
 
     return data;
   }
@@ -144,20 +148,21 @@
       }
     });
 
-    // Object.keys so not to enumerate properties in the prototype  chain
-    var newPayload = Object.keys(data).map(function(key) {
-      // do not encode this, else you'll get doubly encoded values with encoded chars in your reports
-      return key + '=' + data[key];
-    }).join('&');
-
-    this.debugMessage("debug", "Re-assembled modified payload");
+    // reassemble  modified data into a valid payload
+    var tmp = [];
+    for (var key in data)
+      if (data.hasOwnProperty(key)) {
+        tmp.push(key + '=' + data[key]);
+      }
+    newPayload = tmp.join('&');
+    this.log("debug", "Re-assembled modified payload");
     return newPayload;
   }
 
   /**
    * Displays a debug message in the console, if debugging is enabled.
    */
-  DualTracking.prototype.debugMessage = function(type, message) {
+  DualTracking.prototype.log = function(type, message) {
     if (!this.isDebug) return;
     if (arguments.length == 1) {
       message = arguments[0];
