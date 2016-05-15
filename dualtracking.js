@@ -44,21 +44,21 @@
 
     this.debugMessage('Initializing the dualtracking plugin for GA');
     if (!this.property || !this.property.match(/^UA-([0-9]*)-([0-9]{1,2}$)/)) {
-      this.debugMessage('dualtracking plugin: property id, needs to be set and have the following format UA-XXXXXXXX-YY');
+      this.debugMessage('Property id, needs to be set and have the following format UA-XXXXXXXX-YY');
       return 0;
     }
 
     var originalSendHitTask = this.tracker.get('sendHitTask');
-    var that = this; // make this accessible in the following closure
+
     this.tracker.set('sendHitTask', function(model) {
       var payLoad = model.get('hitPayload');
-
       // huge payloads - e.g. if you do EEC with large product lists - are better sent via
-      // xhr post request. AFAIK the original request selects best transport method automatically
-      if (that.debug && that.transport != "xhr") {
+      // xhr post request. AFAIK the original request selects best transport method automatically.
+      // We will at least issue a warning to the developers
+      if (this.debug && this.transport != "xhr") {
         var len = lengthInUtf8Bytes(payload);
         if (len > 2047) {
-          that.debugMessage('info', 'Huge payload ( ~' + len + ' chars), consider setting transport to xhr');
+          this.debugMessage('info', 'Huge payload ( ~' + len + ' chars), consider setting transport to xhr');
         }
       }
 
@@ -66,40 +66,37 @@
       originalSendHitTask(model);
 
       // get the (modified) payload for the duplicate tracker
-      var data = that.deconstructPayload(payLoad);
-      var newPayload = that.reconstructPayload(data);
+      var data = this.deconstructPayload(payLoad);
+      var newPayload = this.reconstructPayload(data);
 
-      if (that.transport == "image") {
+      if (this.transport == "image") {
         var i = new Image(1, 1);
-        i.src = [that.gaEndpoint, newPayload].join("?");
-        i.onload = function() {
-          that.debugMessage('info', 'Image request sent');
-          return;
-        }
-      } else if (that.transport == "beacon") { //  TODO send newPayload as data, not via the url
-        navigator.sendBeacon([that.gaEndpoint, newPayload].join("?"), '');
-        that.debugMessage('info', 'Beacon sent');
-      } else if (that.transport == "xhr") {
+        i.src = [this.gaEndpoint, newPayload].join("?");
+        this.debugMessage('info', 'Image request sent');
+      } else if (this.transport == "beacon") { //  TODO send newPayload as data, not via the url
+        navigator.sendBeacon([this.gaEndpoint, newPayload].join("?"), '');
+        this.debugMessage('info', 'Beacon sent');
+      } else if (this.transport == "xhr") {
 
         var xhr = new XMLHttpRequest();
-        xhr.open('POST', that.gaEndpoint, true);
+        xhr.open('POST', this.gaEndpoint, true);
         xhr.send(newPayload);
 
         // evaluate async response
         xhr.onload = function() {
           var response = xhr.response;
           if (xhr.response.length == 0) {
-            that.debugMessage('error', 'Empty response');
+            this.debugMessage('error', 'Empty response'); // something went wrong
           } else {
-            that.debugMessage('info', 'XHR request sent');
+            this.debugMessage('info', 'XHR request sent');
           }
-        };
-        // if it did not work at all
+        }.bind(this);
+        // if sending did not work at all (network down, url unreachable etc)
         xhr.onerror = function(e) {
-          that.debugMessage('error', 'Network error, no data sent');
-        };
+          this.debugMessage('error', 'Network error, no data sent');
+        }.bind(this);
       }
-    });
+    }.bind(this));
   }
 
   /**
@@ -107,13 +104,13 @@
    */
   DualTracking.prototype.deconstructPayload = function(payLoad) {
 
-    this.debugMessage("debug", "Running deconstructPayload");
-
     // remove leading question mark, split by ampersand and map to
-    // function that splits into key/value pairs
+    // function this splits into key/value pairs
     var data = (payLoad).replace(/(^\?)/, '').split("&").map(function(n) {
       return n = n.split("="), this[n[0]] = n[1], this
     }.bind({}))[0];
+
+    this.debugMessage("debug", "Converted payload to key/value pairs");
 
     return data;
   }
@@ -123,6 +120,7 @@
    * values for the duplicate tracker
    */
   DualTracking.prototype.reconstructPayload = function(data) {
+
     // setting the property id for the duplicate tracker
     data.tid = this.property;
 
@@ -131,10 +129,9 @@
     var keys = Object.keys(fields);
     keys.forEach(function(key) {
       if (typeof fields[key] != "undefined") {
-        if (fields[key] == null) {
+        if (fields[key] === null) {
           delete data[key];
         } else {
-          prevValue = data[key];
           data[key] = fields[key];
         }
       }
@@ -142,9 +139,11 @@
 
     // Object.keys so not to enumerate properties in the prototype  chain
     var newPayload = Object.keys(data).map(function(key) {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
+      // do not encode this, else you'll get doubly encoded values with encoded chars in your reports
+      return key + '=' + data[key];
     }).join('&');
 
+    this.debugMessage("debug", "Re-assembled modified payload");
     return newPayload;
   }
 
@@ -162,10 +161,119 @@
   };
 
   /**
+   * array methds  polyfills just to be on the safe side
+   * http://www.independent-software.com/extending-the-javascript-array-prototype-with-polyfills/
+   */
+
+  if (!Array.prototype.forEach) {
+    Array.prototype.forEach = function(callbackfn, /*optional*/ thisArg) {
+      var k, len;
+
+      // Method cannot be run on an array that does not exist.
+      if (this == null) {
+        throw new TypeError('this is null or not defined');
+      }
+
+      // The callback must be a function.
+      if (typeof callbackfn !== 'function') {
+        throw new TypeError();
+      }
+
+      // Loop through array.
+      len = this.length;
+      k = 0;
+      while (k < len) {
+        if (k in this) {
+          callbackfn.call(thisArg, this[k], k, this);
+        }
+        k = k + 1;
+      }
+    };
+  }
+
+  if (!Array.prototype.indexOf) {
+    Array.prototype.indexOf = function(searchElement, /* optional */ fromIndex) {
+      var n, k, len;
+
+      // Method cannot be run on an array that does not exist.
+      if (this == null) {
+        throw new TypeError('this is null or not defined');
+      }
+
+      // Find array length. Return -1 if array is empty.
+      len = this.length;
+      if (this.len === 0) {
+        return -1;
+      }
+
+      // If argument fromIndex was passed let n be its integral value
+      // (or 0 if not an integer). If no argument passed, start at 0.
+      n = +fromIndex || 0;
+      if (n != n) {
+        n = 0;
+      }
+
+      // If n >= len, return -1.
+      if (n >= len) {
+        return -1;
+      }
+
+      // For a negative index, count from the back.
+      if (n < 0) {
+        // If index still negative, set to 0.
+        n = len + n;
+        if (n < 0) {
+          n = 0;
+        }
+      }
+
+      // Loop through array.
+      while (n < len) {
+        // If element found, return its index.
+        if (n in this && this[n] === searchElement) {
+          return n;
+        }
+        n = n + 1;
+      }
+
+      // Element not found.
+      return -1;
+    };
+  }
+
+  if (!Array.prototype.map) {
+    Array.prototype.map = function(callbackfn, thisArg) {
+      var k, len, result = [];
+
+      // Method cannot be run on an array that does not exist.
+      if (this == null) {
+        throw new TypeError('this is null or not defined');
+      }
+
+      // The callback must be a function.
+      if (typeof callbackfn !== 'function') {
+        throw new TypeError();
+      }
+
+      // Loop through array.
+      len = this.length;
+      k = 0;
+      while (k < len) {
+        if (k in this) {
+          result.push(callbackfn.call(thisArg, this[k], k, this));
+        }
+        k = k + 1;
+      }
+      return result;
+    };
+  }
+
+
+  /**
    * from here http://stackoverflow.com/a/5515960/761212
    */
   DualTracking.prototype.lengthInUtf8Bytes = function(str) {
-    // Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
+    // Matches only the 10.. bytes this are non-initial characters in a multi-byte sequence.
     var m = encodeURIComponent(str).match(/%[89ABab]/g);
     return str.length + (m ? m.length : 0);
   }
