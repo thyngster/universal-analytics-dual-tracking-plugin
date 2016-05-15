@@ -1,8 +1,15 @@
 /**
  *  Universal Analytics Dual Tracking Plugin
- *  Copyright (c) 2016 thyngster (David Vallejo – www.thyngster.com)
+ *  Copyright (c) for the original version 2016 thyngster (David Vallejo – www.thyngster.com)
+ *  https://www.thyngster.com/universal-analytics-plugin-dual-tracking/
+ *
  *  Stephen Harris https://github.com/smhmic
+ *
  *  Eike Pierstorff flesheatingarthropods.org
+ *  https://github.com/flesheatingarthropods/universal-analytics-dual-tracking-plugin
+ *
+ *  Array methods polyfills written by  Independent software
+ *  http://www.independent-software.com/about-independent-software/
  */
 (function() {
   function providePlugin(pluginName, pluginConstructor) {
