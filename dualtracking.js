@@ -5,6 +5,12 @@
 	
 	var isDebug;
 
+	/**
+	 * The plugin constructor. Called by analytics.js with the `new` keyword.
+	 * @param {Object} tracker - The UA tracker object.
+	 * @param {Object} config - The last argument passed to `ga('require', 'dualtracking', ... )`.
+	 * @constructor
+	 */
 	var DualTracking = function(tracker, config) {
 		config = config || {};
 		isDebug = config.debug;
