@@ -99,7 +99,6 @@
 		log('info','Initializing...');
 		this.tracker = tracker;
 		this.property = config.property;
-		this.transport = config.transport || tracker.get('transport');
 		
 		if(!this.property || !this.property.match(/^UA-([0-9]*)-([0-9]{1,2}$)/))
 			return log('error','property id, needs to be set and have the following format UA-XXXXXXXX-YY');
@@ -112,7 +111,7 @@
 				var data = (payLoad).replace(/(^\?)/,'').split("&").map(function(n){return n = n.split("="),this[n[0]] = n[1],this}.bind({}))[0];
 				data.tid = this.property;
 				var newPayload = Object.keys(data).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]); }).join('&');
-				sendHit( newPayload, null, this.transport );
+				sendHit( newPayload, null, tracker.get('transport') );
 				log('info','Sent dual hit to '+this.property);
 			}catch(ex){}
 		}).bind(this) );
