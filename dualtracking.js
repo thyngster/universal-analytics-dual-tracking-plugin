@@ -107,7 +107,7 @@
 			var payLoad = model.get('hitPayload');
 			var data = (payLoad).replace(/(^\?)/,'').split("&").map(function(n){return n = n.split("="),this[n[0]] = n[1],this}.bind({}))[0];
 			data.tid = this.property;
-			var newPayload = Object.keys(data).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]); }).join('&');
+			var newPayload = Object.keys(data).map(function(key) { return key + '=' + data[key]; }).join('&');
 			sendHit( newPayload, null, tracker.get('transport') );
 			log('info','Sent dual hit to '+this.property);
 		}).bind(this) );
