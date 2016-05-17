@@ -8,10 +8,10 @@
  *  Eike Pierstorff flesheatingarthropods.org
  *  https://github.com/flesheatingarthropods/universal-analytics-dual-tracking-plugin
  *
- *  Array methods polyfills  by  Independent software
+ *  Array methods polyfills  from here (Independent software)
  *  http://www.independent-software.com/about-independent-software/
  *
- * Object.keys polyfill from here: https://gist.github.com/jonfalcon/4715325
+ *  Object.keys polyfill from here: https://gist.github.com/jonfalcon/4715325
  */
 
 (function() {
@@ -27,7 +27,7 @@
 
     this.property = config.property;
     this.fields = config.fields || {};
-    this.gaEndpoint = "https://www.google-analytics.com/collect";
+    this.endpoint = config.endpoint || "https://www.google-analytics.com/collect";
 
     this.isDebug = config.debug;
     if (!window.console) {
@@ -84,15 +84,15 @@
 
       if (this.transport == "image") {
         var i = new Image(1, 1);
-        i.src = [this.gaEndpoint, newPayload].join("?");
+        i.src = [this.endpoint, newPayload].join("?");
         this.log('info', 'Image request sent');
       } else if (this.transport == "beacon") { //  TODO send newPayload as data, not via the url
-        navigator.sendBeacon([this.gaEndpoint, newPayload].join("?"), '');
+        navigator.sendBeacon([this.endpoint, newPayload].join("?"), '');
         this.log('info', 'Beacon sent');
       } else if (this.transport == "xhr") {
 
         var xhr = new XMLHttpRequest();
-        xhr.open('POST', this.gaEndpoint, true);
+        xhr.open('POST', this.endpoint, true);
         xhr.send(newPayload);
 
         // evaluate async response
