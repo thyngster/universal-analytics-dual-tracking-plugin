@@ -60,7 +60,7 @@
 
 			case 'beacon':
 				if( window.navigator.sendBeacon
-				    && window.navigator.sendBeacon( urlBase, hitPayload ) ){
+				 && window.navigator.sendBeacon( urlBase, hitPayload ) ){
 					hitCallback();
 					return true;
 				}
@@ -104,14 +104,12 @@
 		var originalSendHitTask = this.tracker.get('sendHitTask');
 		this.tracker.set('sendHitTask', (function(model) {
 			originalSendHitTask(model);
-			try{
-				var payLoad = model.get('hitPayload');
-				var data = (payLoad).replace(/(^\?)/,'').split("&").map(function(n){return n = n.split("="),this[n[0]] = n[1],this}.bind({}))[0];
-				data.tid = this.property;
-				var newPayload = Object.keys(data).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]); }).join('&');
-				sendHit( newPayload, null, tracker.get('transport') );
-				log('info','Sent dual hit to '+this.property);
-			}catch(ex){}
+			var payLoad = model.get('hitPayload');
+			var data = (payLoad).replace(/(^\?)/,'').split("&").map(function(n){return n = n.split("="),this[n[0]] = n[1],this}.bind({}))[0];
+			data.tid = this.property;
+			var newPayload = Object.keys(data).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]); }).join('&');
+			sendHit( newPayload, null, tracker.get('transport') );
+			log('info','Sent dual hit to '+this.property);
 		}).bind(this) );
 	};
 
