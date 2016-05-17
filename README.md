@@ -3,7 +3,10 @@
 This started here:
 https://www.thyngster.com/universal-analytics-plugin-dual-tracking/
 
-I added a few bits&bobs.
+And is elaborated upon here:
+http://www.flesheatingarthropods.org/double-tracking-in-ga-part1/
+http://www.flesheatingarthropods.org/double-tracking-in-ga-part2/
+http://www.flesheatingarthropods.org/double-tracking-in-ga-part3/
 
 # What is it for
 This will send GA tracking calls to a second property without using named trackers and configuring each call twice.
