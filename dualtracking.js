@@ -67,8 +67,6 @@
 				return sendHit( hitPayload, hitCallback, 'xhr' );
 
 			default:
-			 
-			 console.warn( hitPayload.length );
 
 				// Throw error if payload is bigger than 8KB.
 				if( hitPayload.length > 8192 )
