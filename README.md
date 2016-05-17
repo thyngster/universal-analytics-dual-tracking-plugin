@@ -29,6 +29,15 @@ ga('send', 'pageview');
 
 This would send a call to UA-123123123213-11 while unsetting the userId field. Be aware that if you unset a required field the tracking call might not work.
 
+# Valid options
+
+The plugin has the following configuration options:
+
+* property (string ) - The UAID for the secondary property
+* endpoint (string)  - The URL the data is send to (defaults to "https://www.google-analytics.com/collect";)
+* debug    (bool)    - prints status messages to the browser console
+* fields   (object)  - an optional JSON object with key/value pairs. Corresponding fields are overwritten in the payload or removed if the new value is null
+
 # Known Caveats
 
 - does not work with named trackers
