@@ -40,5 +40,5 @@ The plugin has the following configuration options:
 
 # Known Caveats
 
-- does not work with named trackers
+- ~~does not work with named trackers~~ (stupid me. Remember to prepend the tracker name to the require call)
 - not heavily tested
