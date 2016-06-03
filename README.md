@@ -8,7 +8,6 @@ https://www.thyngster.com/universal-analytics-plugin-dual-tracking/
 ga('create', 'UA-286304-123', 'auto');
 ga('require', 'dualtracking', 'http://www.yourdomain.com/js/dualtracking.js', {
     property: 'UA-123123123213-11',
-    debug: true,
-    transport: 'image'
+    debug: true
 });
 ga('send', 'pageview');
